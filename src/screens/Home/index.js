@@ -7,7 +7,7 @@ import {
   Alert,
   FlatList
 } from "react-native";
-import { AppLoading, Permissions } from "expo";
+import { AppLoading, Permissions, Location } from "expo";
 import {
   Container,
   Button,
@@ -25,7 +25,7 @@ import {
 } from "native-base";
 import colors from 'native-base/dist/src/theme/variables/commonColor'
 import Prompt from 'react-native-prompt-crossplatform';
-import {CorsaViewItem} from '../../components/CorsaViewItem'
+import { CorsaViewItem } from '../../components/CorsaViewItem'
 
 import TasksManager from "../../utils/TasksManager";
 import { Subscribe } from "unstated";
@@ -141,20 +141,27 @@ export default class Home extends React.Component {
   }
 
   async handleAddCorsa() {
-    /*if (this.state.gpsIsEnabled) {
-      const location = await Location.getCurrentPositionAsync({});
-      console.log('location', location)
-      const address = await Location.reverseGeocodeAsync({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude
-      })
-      if (address.length >= 1) {
-        Alert.alert(`Te he pillado`, `Sé que estás en ${address[0].city}`)
-      }
-    }
 
-    return;*/
-    this.corsasViewsContainer.add(CorsasViewsContainer.generate(1))
+    const [cv] = CorsasViewsContainer.generate(1)
+    this.corsasViewsContainer.add([cv])
+
+    if (this.state.gpsIsEnabled) {
+      tm.executeInBackground(async () => {
+        const location = await Location.getCurrentPositionAsync({});
+        this.corsasViewsContainer.updateById(cv.id, {
+          location
+        })
+        const address = await Location.reverseGeocodeAsync({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude
+        })
+        if (address.length >= 1) {
+          this.corsasViewsContainer.updateById(cv.id, {
+            address: address[0]
+          })
+        }
+      })
+    }
   }
 
   handleClearCorsas() {
@@ -331,12 +338,12 @@ export default class Home extends React.Component {
             <Subscribe to={[this.corsasViewsContainer, this.timerContainer]}>
               {
                 cv => (
-                  <FlatList 
-                    data={cv.getFormatedList()} 
+                  <FlatList
+                    data={cv.getFormatedList()}
                     keyExtractor={cv => cv.id}
                     inverted
                     refreshing
-                    renderItem={cv => <CorsaViewItem {...cv.item} onRemove={() => this.handleRemoveCorsa(cv.item)} />} 
+                    renderItem={cv => <CorsaViewItem {...cv.item} onRemove={() => this.handleRemoveCorsa(cv.item)} />}
                   />
                 )
               }

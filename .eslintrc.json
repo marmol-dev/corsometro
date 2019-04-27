@@ -1,10 +1,15 @@
 {
   "extends": ["react-native"],
+  "env": {
+    "browser": false,
+    "node": true
+  },
   "rules": {
     "react/no-did-mount-set-state": 0,
     "import/prefer-default-export": 0,
     "react/display-name": 0,
     "react/prop-types": 0,
-    "react/jsx-no-bind": 0
+    "react/jsx-no-bind": 0,
+    "no-undef":"error"
   }
 }

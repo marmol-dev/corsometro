@@ -47,8 +47,23 @@ export class CorsasViewsContainer extends PersistedContainer {
     }
 
     getFormatedList() {
-        const time = this.state.list.map(cv => CorsasViewsContainer.formatCorsaView(cv))
-        return time
+        const list = this.state.list.map(cv => CorsasViewsContainer.formatCorsaView(cv))
+        return list
+    }
+
+    updateById(idCorsaView, partialCorsaView) {
+        this.setState(state => ({
+            list: state.list.map(cv => {
+                if (cv.id !== idCorsaView) {
+                    return cv
+                }
+
+                return {
+                    ...cv,
+                    ...partialCorsaView
+                }
+            })
+        }))
     }
 
     remove(idCorsaView) {
