@@ -3,46 +3,33 @@
 import React from "react";
 import {
   StyleSheet,
-  StatusBar,
-  Platform,
   AsyncStorage,
-  Alert
+  Alert,
+  FlatList
 } from "react-native";
-import { Font, AppLoading } from "expo";
-import uuid from "react-native-uuid";
+import { AppLoading, Permissions } from "expo";
 import {
   Container,
   Button,
-  Text,
   Header,
   Content,
   Title,
   Body,
   Icon,
-  Grid,
-  Col,
   Right,
-  Footer,
-  FooterTab,
   Toast,
-  Root,
   View,
   Fab,
-  Spinner,
-  Row,
-  List,
-  ListItem,
-  Badge,
   Left,
   Subtitle
 } from "native-base";
 import colors from 'native-base/dist/src/theme/variables/commonColor'
 import Prompt from 'react-native-prompt-crossplatform';
-import moment from "moment";
-import 'moment/locale/es'
-import TasksManager from "../../utils/TasksManager";
+import {CorsaViewItem} from '../../components/CorsaViewItem'
 
-moment.locale('es')
+import TasksManager from "../../utils/TasksManager";
+import { Subscribe } from "unstated";
+import { CorsasViewsContainer, TimerContainer } from "../../containers";
 
 const styles = StyleSheet.create({
   container: {
@@ -52,28 +39,38 @@ const styles = StyleSheet.create({
 
 const tm = new TasksManager()
 
-export default class Home extends React.Component {
 
+export default class Home extends React.Component {
   state = {
     appLoaded: false,
-    corsasViews: [],
     isClearConfirmationVisible: false,
     isAddingAvailable: true,
     isPromptVisible: false,
-    promptValue: '1'
+    promptValue: '1',
+
+    gpsIsBusy: false,
+    gpsHasPermissions: false,
+    gpsIsEnabled: false
   };
 
   constructor() {
     super();
+
+    // Handlers
+    // Various
     this.handleAddCorsa = this.handleAddCorsa.bind(this);
     this.handleClearCorsas = this.handleClearCorsas.bind(this);
     this.handleRemoveCorsa = this.handleRemoveCorsa.bind(this)
-
+    this.handleToggleGps = this.handleToggleGps.bind(this)
+    // Prompt
     this.handleCancelPrompt = this.handleCancelPrompt.bind(this)
     this.handleOpenPrompt = this.handleOpenPrompt.bind(this)
     this.handleSubmitPrompt = this.handleSubmitPrompt.bind(this)
     this.handleChangePromptText = this.handleChangePromptText.bind(this)
-    this.renderCorsaView = this.renderCorsaView.bind(this)
+
+    //Containers
+    this.corsasViewsContainer = CorsasViewsContainer.instance
+    this.timerContainer = new TimerContainer(60 * 1000)
   }
 
   showClearCorsasViewsConfirmation() {
@@ -104,7 +101,7 @@ export default class Home extends React.Component {
             this.setState({
               isClearConfirmationVisible: false
             });
-            this.clearCorsasViews();
+            this.corsasViewsContainer.clear()
           }
         }
       ],
@@ -112,110 +109,52 @@ export default class Home extends React.Component {
     );
   }
 
-  async componentDidMount() {
-    const [corsasViewsStr] = await Promise.all([
-      AsyncStorage.getItem("corsasViews"),
-    ]);
+  static async setStorageGpsStatus(status) {
+    await AsyncStorage.setItem('gpsStatus', JSON.stringify(status))
+  }
 
-    let corsasViews = [];
-    if (corsasViewsStr) {
-      corsasViews = JSON.parse(corsasViewsStr)
-        .map(cv => ({
-          ...cv,
-          createDate: new Date(cv.createDate)
-        }))
-        .map(cv => Home.getUpdatedCorsaView(cv));
+  static async getStorageGpsStatus() {
+    const status = await AsyncStorage.getItem("gpsStatus")
+
+    if (!status) {
+      return false
     }
+
+    return JSON.parse(status)
+  }
+
+  async componentDidMount() {
+    const [, gpsStatus] = await Promise.all([
+      this.requestGpsPermissions(),
+      Home.getStorageGpsStatus()
+    ]);
 
     this.setState({
       appLoaded: true,
-      corsasViews
-    });
-
-    this.refreshInterval = setInterval(() => {
-      this.refreshCorsasViews();
-    }, 10000);
-  }
-
-  refreshCorsasViews() {
-    this.setState({
-      corsasViews: this.state.corsasViews.map(cv => Home.getUpdatedCorsaView(cv))
+      gpsIsEnabled: gpsStatus,
     });
   }
 
   componentWillUnmount() {
-    clearInterval(() => this.refreshInterval);
+    clearInterval(this.refreshInterval);
+    this.timerContainer.destroy()
   }
 
-  setCorsasViews(corsasViews) {
-    this.setState({
-      corsasViews
-    });
-    tm.executeInBackground(async () => {
-      await AsyncStorage.setItem("corsasViews", JSON.stringify(corsasViews));
-    })
-  }
+  async handleAddCorsa() {
+    /*if (this.state.gpsIsEnabled) {
+      const location = await Location.getCurrentPositionAsync({});
+      console.log('location', location)
+      const address = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude
+      })
+      if (address.length >= 1) {
+        Alert.alert(`Te he pillado`, `Sé que estás en ${address[0].city}`)
+      }
+    }
 
-  addCorsaView(view) {
-    this.setCorsasViews([view, ...this.state.corsasViews]);
-  }
-
-  addManyCorsaViews(views) {
-    this.setCorsasViews([...views, ...this.state.corsasViews]);
-  }
-
-  removeCorsaView(idCorsaView) {
-    const corsasViews = this.state.corsasViews.filter(
-      cv => cv.id !== idCorsaView
-    );
-    this.setCorsasViews(corsasViews);
-  }
-
-  clearCorsasViews() {
-    this.setCorsasViews([]);
-  }
-
-  static disclaimers = [
-    "He visto un Corsa",
-    "Ahí va un Corsa",
-    "Corsaaaa 👊",
-    "Mira: Corsa!",
-    "Eooo, un Corsa!",
-    "Toma, Corsa!",
-    "Corsa"
-  ];
-
-  static getRandomDisclaimer() {
-    const index = Math.floor(Math.random() * this.disclaimers.length);
-    const disclaimer = this.disclaimers[index];
-
-    return typeof disclaimer === "string" ? disclaimer : disclaimer();
-  }
-
-  static getUpdatedCorsaView(cv) {
-    return {
-      ...cv,
-      dateFromNow: moment(cv.createDate).fromNow()
-    };
-  }
-
-  generateManyCorsaViews(count) {
-    const corsaViews = Array.from({ length: count }, () => {
-      const corsaView = {
-        id: uuid.v4(),
-        createDate: new Date(),
-        disclaimer: Home.getRandomDisclaimer()
-      };
-      return Home.getUpdatedCorsaView(corsaView)
-    })
-
-    this.addManyCorsaViews(corsaViews);
-
-    return corsaViews
-  }
-
-  handleAddCorsa() {
-    this.generateManyCorsaViews(1)
+    return;*/
+    this.corsasViewsContainer.add(CorsasViewsContainer.generate(1))
   }
 
   handleClearCorsas() {
@@ -250,12 +189,52 @@ export default class Home extends React.Component {
             this.setState({
               isRemoveCorsaConfirmationVisible: false
             });
-            this.removeCorsaView(cv.id);
+            this.corsasViewsContainer.remove(cv.id)
           }
         }
       ],
       { cancelable: false }
     );
+  }
+
+  async requestGpsPermissions() {
+    const { status } = await Permissions.askAsync(Permissions.LOCATION)
+
+    this.setState({
+      gpsHasPermissions: status === 'granted'
+    })
+
+    return status === 'granted'
+  }
+
+  async handleToggleGps() {
+    if (this.state.gpsIsBusy) {
+      return
+    }
+
+    this.setState({
+      gpsIsBusy: true
+    })
+
+    let newStatus
+
+    if (!this.state.gpsIsEnabled) {
+      let hasPermissions = this.state.gpsHasPermissions
+      if (!hasPermissions) {
+        hasPermissions = await this.requestGpsPermissions()
+      }
+
+      newStatus = hasPermissions === true
+    } else {
+      newStatus = false
+    }
+
+    this.setState({
+      gpsIsBusy: false,
+      gpsIsEnabled: newStatus
+    })
+
+    tm.executeInBackground(() => Home.setStorageGpsStatus(newStatus))
   }
 
   openPrompt() {
@@ -304,23 +283,10 @@ export default class Home extends React.Component {
     this.setState({
       isAddingAvailable: false
     });
-    this.generateManyCorsaViews(count)
+    this.corsasViewsContainer.add(CorsasViewsContainer.generate(count))
     Toast.show({
       text: `Raparij@, acabas de añadir ${count} corsa${count > 1 ? 's' : ''}`,
     });
-  }
-
-  renderCorsaView(cv) {
-    return (
-      <ListItem onLongPress={() => this.handleRemoveCorsa(cv)} key={cv.id}>
-        <Body>
-          <Text>{cv.disclaimer}</Text>
-        </Body>
-        <Right>
-          <Text>{cv.dateFromNow}</Text>
-        </Right>
-      </ListItem>
-    );
   }
 
   render() {
@@ -342,21 +308,39 @@ export default class Home extends React.Component {
             </Left>
             <Body>
               <Title>Corsometro</Title>
-              <Subtitle>{this.state.corsasViews.length} corsas</Subtitle>
+              <Subscribe to={[this.corsasViewsContainer]}>
+                {cv => <Subtitle>{cv.state.list.length} corsas</Subtitle>}
+              </Subscribe>
             </Body>
             <Right>
-              {this.state.corsasViews.length === 0 ? null : (
-                <Button onPress={this.handleClearCorsas} transparent>
-                  <Icon name="trash" />
-                </Button>
-              )}
+              <Button onPress={this.handleToggleGps} transparent>
+                <Icon type="MaterialIcons" name={this.state.gpsIsEnabled ? 'gps-fixed' : 'gps-not-fixed'} />
+              </Button>
+              <Subscribe to={[this.corsasViewsContainer]}>
+                {
+                  cv => cv.state.list.length === 0 ? null : (
+                    <Button onPress={this.handleClearCorsas} transparent>
+                      <Icon name="trash" />
+                    </Button>
+                  )
+                }
+              </Subscribe>
             </Right>
           </Header>
           <Content>
-            <List
-              dataArray={this.state.corsasViews}
-              renderRow={this.renderCorsaView}
-            />
+            <Subscribe to={[this.corsasViewsContainer, this.timerContainer]}>
+              {
+                cv => (
+                  <FlatList 
+                    data={cv.getFormatedList()} 
+                    keyExtractor={cv => cv.id}
+                    inverted
+                    refreshing
+                    renderItem={cv => <CorsaViewItem {...cv.item} onRemove={() => this.handleRemoveCorsa(cv.item)} />} 
+                  />
+                )
+              }
+            </Subscribe>
           </Content>
           <View>
             <Fab

@@ -45,17 +45,6 @@ export default class SideBar extends React.Component {
               position: "absolute"
             }}
           />
-          <Image
-            square
-            style={{
-              height: 80,
-              width: 70,
-              position: "absolute",
-              alignSelf: "center",
-              top: 20
-            }}
-            source={require('../../../assets/winner.png')}
-          />
           <List
             dataArray={routes}
             contentContainerStyle={{ marginTop: 120 }}
