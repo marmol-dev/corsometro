@@ -1,5 +1,6 @@
 {
   "main": "node_modules/expo/AppEntry.js",
+  "version": "1.3.0",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -25,5 +26,13 @@
     "eslint-config-react-native": "^4.0.0",
     "unstated": "^2.1.1"
   },
-  "private": true
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tomymolina/corsometro"
+  },
+  "author": {
+    "url": "http://about.me/tomymolina",
+    "name": "Martín Molina"
+  }
 }
