@@ -28,6 +28,7 @@
     "androidStatusBar": {
       "backgroundColor": "#000000"
     },
-    "description": ""
+    "description": "",
+    "githubUrl": "https://github.com/tomymolina/corsometro"
   }
 }
