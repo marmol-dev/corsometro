@@ -26,6 +26,11 @@ const routes = [
     title: 'Premios',
     screen: 'Prizes',
     icon: <Icon type='Entypo' name="price-ribbon" />
+  },
+  {
+    title: 'Mapa',
+    screen: 'Map',
+    icon: <Icon name="map" />
   }
 
 ];

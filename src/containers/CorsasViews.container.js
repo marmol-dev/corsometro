@@ -36,7 +36,7 @@ export class CorsasViewsContainer extends PersistedContainer {
 
     add(corsaViews) {
         this.setState(state => ({
-            list: [ ...state.list, ...corsaViews,]
+            list: [...state.list, ...corsaViews,]
         }))
     }
 
@@ -49,6 +49,10 @@ export class CorsasViewsContainer extends PersistedContainer {
     getFormatedList() {
         const list = this.state.list.map(cv => CorsasViewsContainer.formatCorsaView(cv))
         return list
+    }
+
+    getWithLocationList() {
+        return this.state.list.filter(cv => cv.location)
     }
 
     updateById(idCorsaView, partialCorsaView) {
@@ -64,6 +68,10 @@ export class CorsasViewsContainer extends PersistedContainer {
                 }
             })
         }))
+    }
+
+    getWithLocationList() {
+        return this.state.list.filter(cv => cv.location)
     }
 
     remove(idCorsaView) {
