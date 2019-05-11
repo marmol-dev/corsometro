@@ -3,12 +3,11 @@ import uuid from "react-native-uuid";
 import moment from "moment";
 import 'moment/locale/es'
 import { Container } from 'unstated';
-import { List } from 'immutable'
 moment.locale('es')
 
 export const CORSAS_VIEWS_CONTAINER_KEYS = {
-    CURRENT: 'corsasViews2',
-    HISTORIC: 'corsasViewsHistoric2'
+    CURRENT: 'corsasViews' + (__DEV__ ? '_dev' : ''),
+    HISTORIC: 'corsasViewsHistoric' + (__DEV__ ? '_dev' : '')
 }
 
 export class BaseCorsasViewsContainer extends Container {

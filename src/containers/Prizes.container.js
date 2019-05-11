@@ -48,7 +48,7 @@ export class BasePrizesContainer extends Container {
 export class PrizesContainer extends PersistMixin(BasePrizesContainer) {
     static get instance() {
         if (!this._instance) {
-            this._instance = new PrizesContainer('test1_prizes')
+            this._instance = new PrizesContainer('prizes' + (__DEV__ ? '_dev' : ''))
         }
 
         return this._instance
