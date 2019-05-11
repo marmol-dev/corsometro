@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import { Constants, MapView, Location, Permissions } from 'expo';
 import { Subscribe } from 'unstated';
-import { CorsasViewsContainer } from '../../containers/CorsasViews.container';
+import { CorsasViewsContainer, CORSAS_VIEWS_CONTAINER_KEYS } from '../../containers/CorsasViews.container';
 
 
 const styles = StyleSheet.create({
@@ -25,7 +25,7 @@ export class CorsaViewsMap extends Component {
 
   constructor() {
     super()
-    this.corsaViewsContainer = CorsasViewsContainer.instance
+    this.corsaViewsContainer = CorsasViewsContainer.getJoinedInstance()
   }
 
   componentDidMount() {

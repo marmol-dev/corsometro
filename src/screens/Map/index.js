@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
     }
 });
 
-const corsasViewContainer = CorsasViewsContainer.instance
+const corsasViewContainer = CorsasViewsContainer.getJoinedInstance()
 
 export default ({ navigation }) => (
     <Container style={styles.container}>

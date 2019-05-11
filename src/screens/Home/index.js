@@ -29,7 +29,7 @@ import { CorsaViewItem } from '../../components/CorsaViewItem'
 
 import TasksManager from "../../utils/TasksManager";
 import { Subscribe } from "unstated";
-import { CorsasViewsContainer, TimerContainer } from "../../containers";
+import { CorsasViewsContainer, TimerContainer, CORSAS_VIEWS_CONTAINER_KEYS } from "../../containers";
 
 const styles = StyleSheet.create({
   container: {
@@ -69,7 +69,7 @@ export default class Home extends React.Component {
     this.handleChangePromptText = this.handleChangePromptText.bind(this)
 
     //Containers
-    this.corsasViewsContainer = CorsasViewsContainer.instance
+    this.corsasViewsContainer = CorsasViewsContainer.getInstanceByKey(CORSAS_VIEWS_CONTAINER_KEYS.CURRENT)
     this.timerContainer = new TimerContainer(60 * 1000)
   }
 

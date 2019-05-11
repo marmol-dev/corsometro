@@ -1,10 +1,17 @@
-import { PersistedContainer } from '../utils/PersistedContainer';
+import { PersistMixin } from '../utils/PersistedContainer';
 import uuid from "react-native-uuid";
 import moment from "moment";
 import 'moment/locale/es'
+import { Container } from 'unstated';
+import { List } from 'immutable'
 moment.locale('es')
 
-export class CorsasViewsContainer extends PersistedContainer {
+export const CORSAS_VIEWS_CONTAINER_KEYS = {
+    CURRENT: 'corsasViews2',
+    HISTORIC: 'corsasViewsHistoric2'
+}
+
+export class BaseCorsasViewsContainer extends Container {
     static disclaimers = [
         "He visto un Corsa",
         "Ahí va un Corsa",
@@ -20,14 +27,6 @@ export class CorsasViewsContainer extends PersistedContainer {
         const disclaimer = this.disclaimers[index];
 
         return typeof disclaimer === "string" ? disclaimer : disclaimer();
-    }
-
-    static get instance() {
-        if (!this._instance) {
-            this._instance = new CorsasViewsContainer('corsasViews')
-        }
-
-        return this._instance
     }
 
     state = {
@@ -47,7 +46,7 @@ export class CorsasViewsContainer extends PersistedContainer {
     }
 
     getFormatedList() {
-        const list = this.state.list.map(cv => CorsasViewsContainer.formatCorsaView(cv))
+        const list = this.state.list.map(cv => BaseCorsasViewsContainer.formatCorsaView(cv))
         return list
     }
 
@@ -70,14 +69,22 @@ export class CorsasViewsContainer extends PersistedContainer {
         }))
     }
 
-    getWithLocationList() {
-        return this.state.list.filter(cv => cv.location)
-    }
-
     remove(idCorsaView) {
         this.setState(state => ({
             list: state.list.filter(cv => cv.id !== idCorsaView)
         }))
+    }
+
+    removeCount(count = 1) {
+        if (this.state.list.length < count) {
+            throw new Error('List has less elements than remove count: ' + this.state.list.length + ' < ' `count`)
+        }
+        const removedCvs = this.state.list.slice(0, count)
+        const newCvs = this.state.list.slice(count, this.state.list.length)
+        this.setState({
+            list: newCvs
+        })
+        return removedCvs
     }
 
     static generate(count = 1) {
@@ -93,5 +100,60 @@ export class CorsasViewsContainer extends PersistedContainer {
             ...corsaView,
             dateFromNow: moment(corsaView.createDate).fromNow()
         };
+    }
+}
+
+export class JoinedCorsasViewsContainer extends BaseCorsasViewsContainer {
+
+    /**
+     * 
+     * @param {BaseCorsasViewsContainer[]} cvContainers 
+     */
+    constructor(cvContainers) {
+        super()
+
+        const updateList = () => {
+            this.setState({
+                list: cvContainers.reduce((accum, current) => ([
+                    ...accum,
+                    ...current.state.list
+                ]), [])
+            })
+        }
+
+        updateList()
+        cvContainers.forEach(cvc => cvc.subscribe(updateList))
+    }
+}
+
+export class CorsasViewsContainer extends PersistMixin(BaseCorsasViewsContainer) {
+    static get instance() {
+        return this.getInstanceByKey(CORSAS_VIEWS_CONTAINER_KEYS.CURRENT)
+    }
+
+    static _instances = new Map()
+
+    /**
+     * 
+     * @param {string} keyName
+     * @returns {CorsasViewsContainer} 
+     */
+    static getInstanceByKey(keyName) {
+        if (!this._instances.has(keyName)) {
+            this._instances.set(keyName, new CorsasViewsContainer(keyName))
+        }
+
+        return this._instances.get(keyName)
+    }
+
+    static getJoinedInstance() {
+        if (!this._joinedInstance) {
+            this._joinedInstance = new JoinedCorsasViewsContainer([
+                CORSAS_VIEWS_CONTAINER_KEYS.HISTORIC,
+                CORSAS_VIEWS_CONTAINER_KEYS.CURRENT
+            ].map(k => this.getInstanceByKey(k)))
+        }
+
+        return this._joinedInstance
     }
 }

@@ -4,7 +4,8 @@ import { AppLoading, Font } from 'expo'
 import React from 'react'
 import AppContainer from './screens/Container'
 import { Provider } from 'unstated';
-import { CorsasViewsContainer } from './containers/CorsasViews.container';
+import { CorsasViewsContainer, CORSAS_VIEWS_CONTAINER_KEYS } from './containers/CorsasViews.container';
+import { PrizesContainer } from './containers/Prizes.container';
 export default class extends React.Component {
   state = {
     appLoaded: false
@@ -12,7 +13,9 @@ export default class extends React.Component {
 
   async componentDidMount() {
     await Promise.all([
-      CorsasViewsContainer.instance.load(),
+      CorsasViewsContainer.getInstanceByKey(CORSAS_VIEWS_CONTAINER_KEYS.CURRENT).load(),
+      CorsasViewsContainer.getInstanceByKey(CORSAS_VIEWS_CONTAINER_KEYS.HISTORIC).load(),
+      PrizesContainer.instance.load(),
       Font.loadAsync({
         Roboto: require("native-base/Fonts/Roboto.ttf"),
         Roboto_medium: require("native-base/Fonts/Roboto_medium.ttf"),
@@ -34,7 +37,7 @@ export default class extends React.Component {
         <Provider>
           <AppContainer />
         </Provider>
-      </Root> 
+      </Root>
     )
   }
 }

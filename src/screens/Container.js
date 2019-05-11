@@ -7,7 +7,7 @@ import React from 'react'
 const MainNavigator = createDrawerNavigator(
     screens,
     {
-        initialRouteName: 'Home',
+        initialRouteName: 'Prizes',
         //headerMode: 'none',
         contentComponent: props => <SideBar {...props} />
     }
