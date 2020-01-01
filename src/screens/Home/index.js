@@ -7,7 +7,9 @@ import {
   Alert,
   FlatList
 } from "react-native";
-import { AppLoading, Permissions, Location } from "expo";
+import { AppLoading } from "expo";
+import * as Location from 'expo-location';
+import * as Permissions from 'expo-permissions';
 import {
   Container,
   Button,

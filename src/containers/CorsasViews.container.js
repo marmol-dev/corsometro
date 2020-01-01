@@ -4,6 +4,7 @@ import moment from "moment";
 import 'moment/locale/es'
 import { Container } from 'unstated';
 moment.locale('es')
+import {firestore} from '../firebase'
 
 export const CORSAS_VIEWS_CONTAINER_KEYS = {
     CURRENT: 'corsasViews' + (__DEV__ ? '_dev' : ''),
@@ -36,6 +37,9 @@ export class BaseCorsasViewsContainer extends Container {
         this.setState(state => ({
             list: [...state.list, ...corsaViews,]
         }))
+
+        const promise = Promise.all(corsaViews.map(cv => firestore.collection('corsasViews').add(cv)))
+        return promise
     }
 
     clear() {

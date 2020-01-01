@@ -1,7 +1,10 @@
 /* eslint-disable react-native/no-color-literals */
 import React, { Component } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
-import { Constants, MapView, Location, Permissions } from 'expo';
+import * as Permissions from 'expo-permissions';
+import * as Location from 'expo-location';
+import MapView from 'react-native-maps';
+import Constants from 'expo-constants';
 import { Subscribe } from 'unstated';
 import { CorsasViewsContainer, CORSAS_VIEWS_CONTAINER_KEYS } from '../../containers/CorsasViews.container';
 

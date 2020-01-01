@@ -1,9 +1,12 @@
 
 import { Root } from 'native-base'
-import { AppLoading, Font } from 'expo'
+import { AppLoading } from 'expo';
+import * as Font from 'expo-font';
 import React from 'react'
 import AppContainer from './screens/Container'
 import { Provider } from 'unstated';
+import { Ionicons, MaterialIcons, Entypo, MaterialCommunityIcons } from '@expo/vector-icons';
+
 import { CorsasViewsContainer, CORSAS_VIEWS_CONTAINER_KEYS } from './containers/CorsasViews.container';
 import { PrizesContainer } from './containers/Prizes.container';
 export default class extends React.Component {
@@ -17,10 +20,10 @@ export default class extends React.Component {
       CorsasViewsContainer.getInstanceByKey(CORSAS_VIEWS_CONTAINER_KEYS.HISTORIC).load(),
       PrizesContainer.instance.load(),
       Font.loadAsync({
-        Roboto: require("native-base/Fonts/Roboto.ttf"),
-        Roboto_medium: require("native-base/Fonts/Roboto_medium.ttf"),
-        Ionicons: require("@expo/vector-icons/fonts/Ionicons.ttf")
-      })
+        Roboto: require('../node_modules/native-base/Fonts/Roboto.ttf'),
+        Roboto_medium: require('../node_modules/native-base/Fonts/Roboto_medium.ttf'),
+        ...Ionicons.font,
+      }),
     ])
     this.setState({
       appLoaded: true
